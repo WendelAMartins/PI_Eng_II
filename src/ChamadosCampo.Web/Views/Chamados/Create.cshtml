@@ -1,0 +1,49 @@
+@model ChamadosCampo.Web.ViewModels.NovoChamadoViewModel
+@using ChamadosCampo.Web.Models
+@{ ViewData["Title"] = "Abrir chamado"; }
+
+<h1>Abrir chamado</h1>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="col-md-7">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="mb-3">
+        <label asp-for="Solicitante" class="form-label">Seu nome</label>
+        <input asp-for="Solicitante" class="form-control" />
+        <span asp-validation-for="Solicitante" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Tipo" class="form-label">Tipo de problema</label>
+        <select asp-for="Tipo" class="form-select" asp-items="Html.GetEnumSelectList<TipoProblema>()">
+            <option value="">Selecione...</option>
+        </select>
+        <span asp-validation-for="Tipo" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Endereco" class="form-label">Endereço</label>
+        <input asp-for="Endereco" class="form-control" />
+        <span asp-validation-for="Endereco" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Descricao" class="form-label">Descrição</label>
+        <textarea asp-for="Descricao" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Descricao" class="text-danger"></span>
+    </div>
+    <div class="row">
+        <div class="col mb-3">
+            <label asp-for="Latitude" class="form-label">Latitude (opcional)</label>
+            <input asp-for="Latitude" class="form-control" />
+        </div>
+        <div class="col mb-3">
+            <label asp-for="Longitude" class="form-label">Longitude (opcional)</label>
+            <input asp-for="Longitude" class="form-control" />
+        </div>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Foto" class="form-label">Foto (JPG ou PNG, até 5 MB)</label>
+        <input asp-for="Foto" type="file" accept="image/jpeg,image/png" class="form-control" />
+        <span asp-validation-for="Foto" class="text-danger"></span>
+    </div>
+    <button class="btn btn-primary">Enviar chamado</button>
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

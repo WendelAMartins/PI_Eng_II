@@ -1,0 +1,33 @@
+@model ChamadosCampo.Web.Models.Chamado
+@{ ViewData["Title"] = "Chamado " + Model.Id; }
+
+<h1>@(Model.NumeroOs is int os ? $"OS {os}" : $"Chamado {Model.Id}") <small class="text-muted">@Model.Status</small></h1>
+
+<dl class="row">
+    <dt class="col-sm-3">Tipo</dt><dd class="col-sm-9">@Model.Tipo</dd>
+    <dt class="col-sm-3">Endereço</dt><dd class="col-sm-9">@Model.Endereco</dd>
+    <dt class="col-sm-3">Descrição</dt><dd class="col-sm-9">@Model.Descricao</dd>
+    <dt class="col-sm-3">Solicitante</dt><dd class="col-sm-9">@Model.Solicitante</dd>
+    @if (Model.DataProgramada is DateOnly d)
+    {
+        <dt class="col-sm-3">Programado para</dt><dd class="col-sm-9">@d.ToString("dd/MM/yyyy")</dd>
+    }
+    @if (!string.IsNullOrEmpty(Model.MotivoRecusa))
+    {
+        <dt class="col-sm-3">Motivo da recusa</dt><dd class="col-sm-9">@Model.MotivoRecusa</dd>
+    }
+</dl>
+
+@if (!string.IsNullOrEmpty(Model.FotoPath))
+{
+    <img src="@Model.FotoPath" alt="Foto do problema" class="img-fluid mb-3" style="max-height:300px" />
+}
+
+<h2 class="h5">Histórico</h2>
+<ul class="list-group mb-3">
+@foreach (var h in Model.Historico.OrderBy(h => h.Em))
+{
+    <li class="list-group-item">@h.Em.ToLocalTime().ToString("dd/MM/yyyy HH:mm") – <strong>@h.Status</strong>: @h.Observacao</li>
+}
+</ul>
+<a asp-action="Index" asp-route-solicitante="@Model.Solicitante">Voltar</a>

@@ -1,0 +1,42 @@
+@model List<ChamadosCampo.Web.Models.Chamado>
+@{ ViewData["Title"] = "Meus chamados"; }
+
+<h1>Meus chamados</h1>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-sm-6">
+        <label for="solicitante" class="form-label">Seu nome</label>
+        <input id="solicitante" name="solicitante" class="form-control" value="@ViewBag.Solicitante" required />
+    </div>
+    <div class="col-sm-3 align-self-end">
+        <button class="btn btn-primary">Consultar</button>
+    </div>
+</form>
+
+@if (string.IsNullOrWhiteSpace((string?)ViewBag.Solicitante))
+{
+    <p class="text-muted">Informe seu nome para ver o andamento dos seus chamados.</p>
+}
+else if (!Model.Any())
+{
+    <p class="text-muted">Nenhum chamado encontrado para este nome.</p>
+}
+else
+{
+    <table class="table">
+        <thead><tr><th>OS</th><th>Tipo</th><th>Endereço</th><th>Status</th><th>Programado</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var c in Model)
+        {
+            <tr>
+                <td>@(c.NumeroOs?.ToString() ?? "—")</td>
+                <td>@c.Tipo</td>
+                <td>@c.Endereco</td>
+                <td>@c.Status</td>
+                <td>@(c.DataProgramada?.ToString("dd/MM/yyyy") ?? "—")</td>
+                <td><a asp-action="Details" asp-route-id="@c.Id">Detalhes</a></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

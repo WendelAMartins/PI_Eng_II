@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Chamados de Campo</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-controller="Chamados" asp-action="Index">Chamados de Campo</a>
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" asp-controller="Chamados" asp-action="Create">Abrir chamado</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Chamados" asp-action="Index">Meus chamados</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Painel" asp-action="Index">Painel da chefia</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @if (TempData["Sucesso"] is string ok) { <div class="alert alert-success" role="alert">@ok</div> }
+            @if (TempData["Aviso"] is string av) { <div class="alert alert-warning" role="alert">@av</div> }
+            @if (TempData["Erro"] is string er) { <div class="alert alert-danger" role="alert">@er</div> }
+            @RenderBody()
+        </main>
+    </div>
+    <footer class="border-top footer text-muted">
+        <div class="container">Projeto Integrador de Engenharia de Software II – dados fictícios</div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

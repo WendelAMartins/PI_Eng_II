@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ChamadosCampo.Web/ChamadosCampo.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ChamadosCampo.Tests/ChamadosCampo.Tests.csproj" />
+  </Folder>
+</Solution>
