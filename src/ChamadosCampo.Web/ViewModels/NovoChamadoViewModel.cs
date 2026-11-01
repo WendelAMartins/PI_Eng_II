@@ -17,8 +17,9 @@ public class NovoChamadoViewModel
     [Required(ErrorMessage = "Descreva o problema."), StringLength(500)]
     public string Descricao { get; set; } = "";
 
-    [Range(-90, 90)] public double? Latitude { get; set; }
-    [Range(-180, 180)] public double? Longitude { get; set; }
+    // Texto, para aceitar ponto ou vírgula como separador decimal.
+    public string? Latitude { get; set; }
+    public string? Longitude { get; set; }
 
     public IFormFile? Foto { get; set; }
 }

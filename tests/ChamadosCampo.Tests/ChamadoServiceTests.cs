@@ -154,4 +154,52 @@ public class ChamadoServiceTests : IDisposable
     {
         Assert.Equal(esperado, ChamadoService.ValidarFoto(nome, tam));
     }
+
+    [Fact]
+    public async Task Abrir_EnderecoComAbreviacao_EhDuplicado()
+    {
+        await _svc.AbrirAsync(Novo("Av. Paulista, 1000 - Bela Vista"));
+        var r = await _svc.AbrirAsync(Novo("Avenida Paulista 1000 Bela Vista"));
+        Assert.True(r.Duplicado);
+    }
+
+    [Fact]
+    public async Task Buscar_PorNomeSemDiferenciarMaiusculas()
+    {
+        await _svc.AbrirAsync(new Chamado { Solicitante = "Rodrigo Alves", Endereco = "Rua X", Descricao = "x" });
+        Assert.Single(await _svc.BuscarAsync("rodrigo alves"));
+    }
+
+    [Theory]
+    [InlineData("1")]
+    [InlineData("OS 1")]
+    [InlineData("os-0001")]
+    [InlineData("#1")]
+    public async Task Buscar_PorNumeroDaOs(string termo)
+    {
+        var c = (await _svc.AbrirAsync(Novo())).Chamado;
+        await _svc.AceitarAsync(c.Id);
+        Assert.Single(await _svc.BuscarAsync(termo));
+    }
+
+    [Fact]
+    public async Task Programar_DataPassada_Falha()
+    {
+        var c = (await _svc.AbrirAsync(Novo())).Chamado;
+        await _svc.AceitarAsync(c.Id);
+        var ontem = DateOnly.FromDateTime(DateTime.Today).AddDays(-1);
+        await Assert.ThrowsAsync<ArgumentException>(() => _svc.ProgramarAsync(c.Id, ontem));
+    }
+
+    [Theory]
+    [InlineData("-23.5615", true, -23.5615)]
+    [InlineData("-23,5615", true, -23.5615)]
+    [InlineData("", true, null)]
+    [InlineData("abc", false, null)]
+    [InlineData("95", false, null)]
+    public void Coordenada_AceitaPontoOuVirgula(string texto, bool ok, double? esperado)
+    {
+        Assert.Equal(ok, Web.Controllers.ChamadosController.TentarLerCoordenada(texto, 90, out var valor));
+        Assert.Equal(esperado, valor);
+    }
 }

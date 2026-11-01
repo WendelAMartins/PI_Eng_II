@@ -16,13 +16,24 @@ public class ChamadosController : Controller
         _env = env;
     }
 
-    public async Task<IActionResult> Index(string? solicitante)
+    public async Task<IActionResult> Index(string? busca)
     {
-        ViewBag.Solicitante = solicitante;
-        var lista = string.IsNullOrWhiteSpace(solicitante)
+        ViewBag.Busca = busca;
+        var lista = string.IsNullOrWhiteSpace(busca)
             ? new List<Chamado>()
-            : await _service.ListarPorSolicitanteAsync(solicitante.Trim());
+            : await _service.BuscarAsync(busca);
         return View(lista);
+    }
+
+    public static bool TentarLerCoordenada(string? texto, double limite, out double? valor)
+    {
+        valor = null;
+        if (string.IsNullOrWhiteSpace(texto)) return true;
+        var ok = double.TryParse(texto.Trim().Replace(',', '.'),
+            System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var n);
+        if (!ok || Math.Abs(n) > limite) return false;
+        valor = n;
+        return true;
     }
 
     public IActionResult Create() => View(new NovoChamadoViewModel());
@@ -35,6 +46,10 @@ public class ChamadosController : Controller
             var erro = ChamadoService.ValidarFoto(vm.Foto.FileName, vm.Foto.Length);
             if (erro != null) ModelState.AddModelError(nameof(vm.Foto), erro);
         }
+        if (!TentarLerCoordenada(vm.Latitude, 90, out var lat))
+            ModelState.AddModelError(nameof(vm.Latitude), "Latitude inválida (use valor entre -90 e 90).");
+        if (!TentarLerCoordenada(vm.Longitude, 180, out var lon))
+            ModelState.AddModelError(nameof(vm.Longitude), "Longitude inválida (use valor entre -180 e 180).");
         if (!ModelState.IsValid) return View(vm);
 
         var chamado = new Chamado
@@ -43,8 +58,8 @@ public class ChamadosController : Controller
             Tipo = vm.Tipo!.Value,
             Endereco = vm.Endereco.Trim(),
             Descricao = vm.Descricao.Trim(),
-            Latitude = vm.Latitude,
-            Longitude = vm.Longitude
+            Latitude = lat,
+            Longitude = lon
         };
 
         var resultado = await _service.AbrirAsync(chamado);

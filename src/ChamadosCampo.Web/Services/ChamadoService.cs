@@ -23,8 +23,23 @@ public class ChamadoService
         return ExtensoesFoto.Contains(ext) ? null : "Use foto JPG ou PNG.";
     }
 
-    public static string NormalizarEndereco(string endereco) =>
-        string.Join(' ', endereco.Split(' ', StringSplitOptions.RemoveEmptyEntries)).ToLowerInvariant();
+    private static readonly Dictionary<string, string> Abreviaturas = new()
+    {
+        ["av"] = "avenida", ["r"] = "rua", ["tv"] = "travessa", ["trav"] = "travessa",
+        ["pc"] = "praca", ["pca"] = "praca", ["al"] = "alameda", ["rod"] = "rodovia", ["est"] = "estrada"
+    };
+
+    public static string NormalizarEndereco(string endereco)
+    {
+        var decomposto = endereco.Normalize(System.Text.NormalizationForm.FormD);
+        var semAcento = new string(decomposto
+            .Where(ch => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch) != System.Globalization.UnicodeCategory.NonSpacingMark)
+            .Select(ch => char.IsLetterOrDigit(ch) ? char.ToLowerInvariant(ch) : ' ')
+            .ToArray());
+        var palavras = semAcento.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(p => Abreviaturas.TryGetValue(p, out var inteira) ? inteira : p);
+        return string.Join(' ', palavras);
+    }
 
     public async Task<ResultadoAbertura> AbrirAsync(Chamado novo)
     {
@@ -57,8 +72,21 @@ public class ChamadoService
     public Task<Chamado?> ObterAsync(int id) =>
         _db.Chamados.Include(c => c.Historico).FirstOrDefaultAsync(c => c.Id == id);
 
-    public Task<List<Chamado>> ListarPorSolicitanteAsync(string solicitante) =>
-        _db.Chamados.Where(c => c.Solicitante == solicitante).OrderByDescending(c => c.CriadoEm).ToListAsync();
+    public Task<List<Chamado>> ListarPorSolicitanteAsync(string solicitante)
+    {
+        var nome = solicitante.Trim().ToLower();
+        return _db.Chamados.Where(c => c.Solicitante.ToLower() == nome).OrderByDescending(c => c.CriadoEm).ToListAsync();
+    }
+
+    // Aceita nome do solicitante (sem diferenciar maiúsculas) ou número da OS ("4", "OS 4", "OS-0004").
+    public Task<List<Chamado>> BuscarAsync(string termo)
+    {
+        var limpo = termo.Trim();
+        var digitos = limpo.StartsWith("os", StringComparison.OrdinalIgnoreCase) ? limpo[2..].Trim(' ', '-', '#') : limpo.TrimStart('#');
+        if (int.TryParse(digitos, out var numero))
+            return _db.Chamados.Where(c => c.NumeroOs == numero).OrderByDescending(c => c.CriadoEm).ToListAsync();
+        return ListarPorSolicitanteAsync(limpo);
+    }
 
     public Task<List<Chamado>> ListarPorStatusAsync(StatusChamado status) =>
         _db.Chamados.Where(c => c.Status == status).OrderBy(c => c.CriadoEm).ToListAsync();
@@ -85,6 +113,8 @@ public class ChamadoService
 
     public async Task ProgramarAsync(int id, DateOnly data)
     {
+        if (data < DateOnly.FromDateTime(DateTime.Today))
+            throw new ArgumentException("A data programada não pode ser anterior a hoje.");
         var c = await ObterOuFalharAsync(id);
         Exigir(c, StatusChamado.Aceito, StatusChamado.Programado);
         c.DataProgramada = data;

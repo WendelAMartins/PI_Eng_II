@@ -1,60 +1,93 @@
-@using ChamadosCampo.Web.Models
 @{
     ViewData["Title"] = "Painel da chefia";
     var pendentes = (List<Chamado>)ViewBag.Pendentes;
     var aceitos = (List<Chamado>)ViewBag.Aceitos;
     var programados = (List<Chamado>)ViewBag.Programados;
     var emAndamento = (List<Chamado>)ViewBag.EmAndamento;
+    var erroId = TempData["ErroId"] as int?;
+    var erroMsg = TempData["ErroCartao"] as string;
 }
 
-<h1>Painel da chefia</h1>
+<div class="pagina-topo">
+    <div>
+        <h1>Painel da chefia</h1>
+        <p>Analise os pedidos e conduza cada OS até o encerramento.</p>
+    </div>
+</div>
 
-<h2 class="h5 mt-4">Aguardando análise (@pendentes.Count)</h2>
-@foreach (var c in pendentes)
-{
-    <div class="card mb-2"><div class="card-body">
-        <strong>@c.Tipo</strong> – @c.Endereco<br />@c.Descricao
-        <div class="mt-2 d-flex gap-2">
-            <form asp-action="Aceitar" method="post"><input type="hidden" name="id" value="@c.Id" /><button class="btn btn-success btn-sm">Aceitar (gera OS)</button></form>
-            <form asp-action="Recusar" method="post" class="d-flex gap-1">
-                <input type="hidden" name="id" value="@c.Id" />
-                <input name="motivo" class="form-control form-control-sm" placeholder="Motivo da recusa" required />
-                <button class="btn btn-outline-danger btn-sm">Recusar</button>
-            </form>
-        </div>
-    </div></div>
-}
+<div class="quadro">
+    <section class="coluna">
+        <h2>Em análise <span>@pendentes.Count</span></h2>
+        @if (!pendentes.Any()) { <p class="text-muted small px-2">Nada aguardando.</p> }
+        @foreach (var c in pendentes)
+        {
+            <article class="cartao-os @(erroId == c.Id ? "com-erro" : "")" id="c@(c.Id)">
+                <div class="tipo">@c.Tipo.Rotulo()</div>
+                <div class="end">@c.Endereco</div>
+                <div class="desc">@c.Descricao</div>
+                <a class="ver-detalhes" asp-controller="Chamados" asp-action="Details" asp-route-id="@c.Id">Ver detalhes, foto e histórico</a>
+                @if (erroId == c.Id) { <div class="erro-cartao" role="alert">@erroMsg</div> }
+                <div class="acoes">
+                    <form asp-action="Aceitar" method="post"><input type="hidden" name="id" value="@c.Id" /><button class="btn btn-success btn-sm">Aceitar e gerar OS</button></form>
+                    <form asp-action="Recusar" method="post">
+                        <input type="hidden" name="id" value="@c.Id" />
+                        <input name="motivo" class="form-control form-control-sm" placeholder="Motivo da recusa" required />
+                        <button class="btn btn-outline-danger btn-sm">Recusar</button>
+                    </form>
+                </div>
+            </article>
+        }
+    </section>
 
-<h2 class="h5 mt-4">OS aceitas, sem programação (@aceitos.Count)</h2>
-@foreach (var c in aceitos)
-{
-    <div class="card mb-2"><div class="card-body">
-        <strong>OS @c.NumeroOs</strong> – @c.Tipo – @c.Endereco
-        <div class="mt-2 d-flex gap-2">
-            <form asp-action="Programar" method="post" class="d-flex gap-1">
-                <input type="hidden" name="id" value="@c.Id" />
-                <input type="date" name="data" class="form-control form-control-sm" required />
-                <button class="btn btn-primary btn-sm">Programar</button>
-            </form>
-            <form asp-action="Iniciar" method="post"><input type="hidden" name="id" value="@c.Id" /><button class="btn btn-outline-primary btn-sm">Iniciar</button></form>
-        </div>
-    </div></div>
-}
+    <section class="coluna">
+        <h2>Aceitas <span>@aceitos.Count</span></h2>
+        @if (!aceitos.Any()) { <p class="text-muted small px-2">Nenhuma OS sem programação.</p> }
+        @foreach (var c in aceitos)
+        {
+            <article class="cartao-os @(erroId == c.Id ? "com-erro" : "")" id="c@(c.Id)">
+                <div class="tipo"><span class="os-numero">@c.Titulo()</span> · @c.Tipo.Rotulo()</div>
+                <div class="end">@c.Endereco</div>
+                <a class="ver-detalhes" asp-controller="Chamados" asp-action="Details" asp-route-id="@c.Id">Ver detalhes, foto e histórico</a>
+                @if (erroId == c.Id) { <div class="erro-cartao" role="alert">@erroMsg</div> }
+                <div class="acoes">
+                    <form asp-action="Programar" method="post">
+                        <input type="hidden" name="id" value="@c.Id" />
+                        <input type="date" name="data" class="form-control form-control-sm" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                        <button class="btn btn-primary btn-sm">Programar</button>
+                    </form>
+                    <form asp-action="Iniciar" method="post"><input type="hidden" name="id" value="@c.Id" /><button class="btn btn-outline-primary btn-sm">Iniciar agora</button></form>
+                </div>
+            </article>
+        }
+    </section>
 
-<h2 class="h5 mt-4">Programadas (@programados.Count)</h2>
-@foreach (var c in programados)
-{
-    <div class="card mb-2"><div class="card-body">
-        <strong>OS @c.NumeroOs</strong> – @c.Endereco – @c.DataProgramada?.ToString("dd/MM/yyyy")
-        <form asp-action="Iniciar" method="post" class="mt-2"><input type="hidden" name="id" value="@c.Id" /><button class="btn btn-outline-primary btn-sm">Iniciar</button></form>
-    </div></div>
-}
+    <section class="coluna">
+        <h2>Programadas <span>@programados.Count</span></h2>
+        @if (!programados.Any()) { <p class="text-muted small px-2">Nenhuma programada.</p> }
+        @foreach (var c in programados)
+        {
+            <article class="cartao-os @(erroId == c.Id ? "com-erro" : "")" id="c@(c.Id)">
+                <div class="tipo"><span class="os-numero">@c.Titulo()</span> · @c.Tipo.Rotulo()</div>
+                <div class="end">@c.Endereco · @c.DataProgramada?.ToString("dd/MM/yyyy")</div>
+                <a class="ver-detalhes" asp-controller="Chamados" asp-action="Details" asp-route-id="@c.Id">Ver detalhes, foto e histórico</a>
+                @if (erroId == c.Id) { <div class="erro-cartao" role="alert">@erroMsg</div> }
+                <div class="acoes"><form asp-action="Iniciar" method="post"><input type="hidden" name="id" value="@c.Id" /><button class="btn btn-primary btn-sm">Iniciar</button></form></div>
+            </article>
+        }
+    </section>
 
-<h2 class="h5 mt-4">Em andamento (@emAndamento.Count)</h2>
-@foreach (var c in emAndamento)
-{
-    <div class="card mb-2"><div class="card-body">
-        <strong>OS @c.NumeroOs</strong> – @c.Endereco
-        <form asp-action="Encerrar" method="post" class="mt-2"><input type="hidden" name="id" value="@c.Id" /><button class="btn btn-success btn-sm">Encerrar</button></form>
-    </div></div>
-}
+    <section class="coluna">
+        <h2>Em andamento <span>@emAndamento.Count</span></h2>
+        @if (!emAndamento.Any()) { <p class="text-muted small px-2">Nada em execução.</p> }
+        @foreach (var c in emAndamento)
+        {
+            <article class="cartao-os @(erroId == c.Id ? "com-erro" : "")" id="c@(c.Id)">
+                <div class="tipo"><span class="os-numero">@c.Titulo()</span> · @c.Tipo.Rotulo()</div>
+                <div class="end">@c.Endereco</div>
+                <a class="ver-detalhes" asp-controller="Chamados" asp-action="Details" asp-route-id="@c.Id">Ver detalhes, foto e histórico</a>
+                @if (erroId == c.Id) { <div class="erro-cartao" role="alert">@erroMsg</div> }
+                <div class="acoes"><form asp-action="Encerrar" method="post"><input type="hidden" name="id" value="@c.Id" /><button class="btn btn-success btn-sm">Encerrar</button></form></div>
+            </article>
+        }
+    </section>
+</div>

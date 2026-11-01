@@ -20,27 +20,28 @@ public class PainelController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public Task<IActionResult> Aceitar(int id) => Executar(() => _service.AceitarAsync(id));
+    public Task<IActionResult> Aceitar(int id) => Executar(id, () => _service.AceitarAsync(id));
 
     [HttpPost, ValidateAntiForgeryToken]
-    public Task<IActionResult> Recusar(int id, string motivo) => Executar(() => _service.RecusarAsync(id, motivo));
+    public Task<IActionResult> Recusar(int id, string motivo) => Executar(id, () => _service.RecusarAsync(id, motivo));
 
     [HttpPost, ValidateAntiForgeryToken]
-    public Task<IActionResult> Programar(int id, DateOnly data) => Executar(() => _service.ProgramarAsync(id, data));
+    public Task<IActionResult> Programar(int id, DateOnly data) => Executar(id, () => _service.ProgramarAsync(id, data));
 
     [HttpPost, ValidateAntiForgeryToken]
-    public Task<IActionResult> Iniciar(int id) => Executar(() => _service.IniciarAsync(id));
+    public Task<IActionResult> Iniciar(int id) => Executar(id, () => _service.IniciarAsync(id));
 
     [HttpPost, ValidateAntiForgeryToken]
-    public Task<IActionResult> Encerrar(int id) => Executar(() => _service.EncerrarAsync(id));
+    public Task<IActionResult> Encerrar(int id) => Executar(id, () => _service.EncerrarAsync(id));
 
-    private async Task<IActionResult> Executar(Func<Task> acao)
+    private async Task<IActionResult> Executar(int id, Func<Task> acao)
     {
         try { await acao(); }
         catch (Exception e) when (e is InvalidOperationException or ArgumentException or KeyNotFoundException)
         {
-            TempData["Erro"] = e.Message;
+            TempData["ErroId"] = id;
+            TempData["ErroCartao"] = e.Message;
         }
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), null, $"c{id}");
     }
 }

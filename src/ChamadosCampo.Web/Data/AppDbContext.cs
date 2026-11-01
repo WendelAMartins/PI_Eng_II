@@ -30,8 +30,8 @@ public static class DadosIniciais
     {
         if (db.Chamados.Any()) return;
         db.Chamados.AddRange(
-            new Chamado { Tipo = TipoProblema.PlacaCaida, Descricao = "Placa de pare caída no cruzamento.", Endereco = "Rua Exemplo, 100", Solicitante = "Agente Demo", Status = StatusChamado.Aceito, NumeroOs = 1 },
-            new Chamado { Tipo = TipoProblema.FaixaApagada, Descricao = "Faixa de pedestre apagada.", Endereco = "Av. Modelo, 250", Solicitante = "Agente Demo" });
+            new Chamado { Tipo = TipoProblema.PlacaCaida, Descricao = "Placa de pare caída no cruzamento.", Endereco = "Rua Exemplo, 100", Solicitante = "Usuário Exemplo", Status = StatusChamado.Aceito, NumeroOs = 1 },
+            new Chamado { Tipo = TipoProblema.FaixaApagada, Descricao = "Faixa de pedestre apagada.", Endereco = "Av. Modelo, 250", Solicitante = "Usuário Exemplo" });
         db.SaveChanges();
     }
 }

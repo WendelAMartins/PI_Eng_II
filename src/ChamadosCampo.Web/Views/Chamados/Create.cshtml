@@ -1,49 +1,77 @@
 @model ChamadosCampo.Web.ViewModels.NovoChamadoViewModel
-@using ChamadosCampo.Web.Models
 @{ ViewData["Title"] = "Abrir chamado"; }
 
-<h1>Abrir chamado</h1>
-
-<form asp-action="Create" method="post" enctype="multipart/form-data" class="col-md-7">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <div class="mb-3">
-        <label asp-for="Solicitante" class="form-label">Seu nome</label>
-        <input asp-for="Solicitante" class="form-control" />
-        <span asp-validation-for="Solicitante" class="text-danger"></span>
+<div class="pagina-topo">
+    <div>
+        <h1>Abrir chamado</h1>
+        <p>Descreva o problema. A chefia analisa e, se aceito, ele vira uma OS numerada.</p>
     </div>
-    <div class="mb-3">
-        <label asp-for="Tipo" class="form-label">Tipo de problema</label>
-        <select asp-for="Tipo" class="form-select" asp-items="Html.GetEnumSelectList<TipoProblema>()">
-            <option value="">Selecione...</option>
-        </select>
-        <span asp-validation-for="Tipo" class="text-danger"></span>
+</div>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="cartao col-lg-8">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="Solicitante" class="form-label">Seu nome</label>
+            <input asp-for="Solicitante" class="form-control" autocomplete="name" />
+            <span asp-validation-for="Solicitante" class="text-danger"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label asp-for="Tipo" class="form-label">Tipo de problema</label>
+            <select asp-for="Tipo" class="form-select">
+                <option value="">Selecione...</option>
+                @foreach (var t in Enum.GetValues<TipoProblema>())
+                {
+                    <option value="@((int)t)" selected="@(Model.Tipo == t)">@t.Rotulo()</option>
+                }
+            </select>
+            <span asp-validation-for="Tipo" class="text-danger"></span>
+        </div>
     </div>
     <div class="mb-3">
         <label asp-for="Endereco" class="form-label">Endereço</label>
-        <input asp-for="Endereco" class="form-control" />
+        <input asp-for="Endereco" class="form-control" placeholder="Rua, número, bairro" />
         <span asp-validation-for="Endereco" class="text-danger"></span>
+        <div class="dica">Se já existir chamado igual neste local, você será avisado.</div>
     </div>
     <div class="mb-3">
-        <label asp-for="Descricao" class="form-label">Descrição</label>
-        <textarea asp-for="Descricao" class="form-control" rows="3"></textarea>
+        <label asp-for="Descricao" class="form-label">O que está acontecendo?</label>
+        <textarea asp-for="Descricao" class="form-control" rows="3" maxlength="500"></textarea>
         <span asp-validation-for="Descricao" class="text-danger"></span>
     </div>
-    <div class="row">
-        <div class="col mb-3">
-            <label asp-for="Latitude" class="form-label">Latitude (opcional)</label>
-            <input asp-for="Latitude" class="form-control" />
-        </div>
-        <div class="col mb-3">
-            <label asp-for="Longitude" class="form-label">Longitude (opcional)</label>
-            <input asp-for="Longitude" class="form-control" />
-        </div>
-    </div>
     <div class="mb-3">
-        <label asp-for="Foto" class="form-label">Foto (JPG ou PNG, até 5 MB)</label>
+        <label asp-for="Foto" class="form-label">Foto (opcional)</label>
         <input asp-for="Foto" type="file" accept="image/jpeg,image/png" class="form-control" />
         <span asp-validation-for="Foto" class="text-danger"></span>
+        <div class="dica">JPG ou PNG, até 5 MB.</div>
     </div>
-    <button class="btn btn-primary">Enviar chamado</button>
+    <details class="mb-3">
+        <summary class="form-label" style="cursor:pointer">Coordenadas (opcional)</summary>
+        <button type="button" id="usar-local" class="btn btn-outline-secondary btn-sm mt-2">Usar minha localização</button>
+        <span id="local-msg" class="dica ms-2"></span>
+        <div class="row mt-2">
+            <div class="col"><input asp-for="Latitude" class="form-control" placeholder="Latitude (ex: -23.5615)" inputmode="decimal" /><span asp-validation-for="Latitude" class="text-danger"></span></div>
+            <div class="col"><input asp-for="Longitude" class="form-control" placeholder="Longitude (ex: -46.6559)" inputmode="decimal" /><span asp-validation-for="Longitude" class="text-danger"></span></div>
+        </div>
+    </details>
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary">Enviar chamado</button>
+        <a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a>
+    </div>
 </form>
 
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById("usar-local").addEventListener("click", function () {
+            var msg = document.getElementById("local-msg");
+            if (!navigator.geolocation) { msg.textContent = "Seu navegador não permite localização."; return; }
+            msg.textContent = "Buscando localização...";
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                document.getElementById("Latitude").value = pos.coords.latitude.toFixed(6);
+                document.getElementById("Longitude").value = pos.coords.longitude.toFixed(6);
+                msg.textContent = "Localização preenchida.";
+            }, function () { msg.textContent = "Não foi possível obter a localização."; });
+        });
+    </script>
+}

@@ -1,42 +1,42 @@
-@model List<ChamadosCampo.Web.Models.Chamado>
-@{ ViewData["Title"] = "Meus chamados"; }
+@model List<Chamado>
+@{ ViewData["Title"] = "Meus chamados"; var nome = (string?)ViewBag.Busca; }
 
-<h1>Meus chamados</h1>
-
-<form method="get" class="row g-2 mb-3">
-    <div class="col-sm-6">
-        <label for="solicitante" class="form-label">Seu nome</label>
-        <input id="solicitante" name="solicitante" class="form-control" value="@ViewBag.Solicitante" required />
+<div class="pagina-topo">
+    <div>
+        <h1>Meus chamados</h1>
+        <p>Acompanhe o andamento de tudo que você solicitou.</p>
     </div>
-    <div class="col-sm-3 align-self-end">
+    <a class="btn btn-primary" asp-action="Create">+ Abrir chamado</a>
+</div>
+
+<form method="get" class="cartao mb-3">
+    <label for="busca" class="form-label">Seu nome ou o número da OS</label>
+    <div class="d-flex gap-2">
+        <input id="busca" name="busca" class="form-control" value="@nome" placeholder="Ex.: Maria Silva, ou OS 4" required />
         <button class="btn btn-primary">Consultar</button>
     </div>
 </form>
 
-@if (string.IsNullOrWhiteSpace((string?)ViewBag.Solicitante))
+@if (string.IsNullOrWhiteSpace(nome))
 {
-    <p class="text-muted">Informe seu nome para ver o andamento dos seus chamados.</p>
+    <div class="cartao vazio"><span class="icone">🔎</span>Informe seu nome (ou o número da OS) para ver seus chamados. A OS só existe depois que a chefia aceita o chamado.</div>
 }
 else if (!Model.Any())
 {
-    <p class="text-muted">Nenhum chamado encontrado para este nome.</p>
+    <div class="cartao vazio"><span class="icone">📭</span>Nenhum chamado encontrado para “@nome”.</div>
 }
 else
 {
-    <table class="table">
-        <thead><tr><th>OS</th><th>Tipo</th><th>Endereço</th><th>Status</th><th>Programado</th><th></th></tr></thead>
-        <tbody>
-        @foreach (var c in Model)
-        {
-            <tr>
-                <td>@(c.NumeroOs?.ToString() ?? "—")</td>
-                <td>@c.Tipo</td>
-                <td>@c.Endereco</td>
-                <td>@c.Status</td>
-                <td>@(c.DataProgramada?.ToString("dd/MM/yyyy") ?? "—")</td>
-                <td><a asp-action="Details" asp-route-id="@c.Id">Detalhes</a></td>
-            </tr>
-        }
-        </tbody>
-    </table>
+    <div class="lista-chamados">
+    @foreach (var c in Model)
+    {
+        <a class="cartao item-chamado" asp-action="Details" asp-route-id="@c.Id">
+            <div>
+                <strong><span class="os-numero">@c.Titulo()</span> · @c.Tipo.Rotulo()</strong>
+                <span class="meta">@c.Endereco@(c.DataProgramada is DateOnly d ? $" · programado para {d:dd/MM/yyyy}" : "")</span>
+            </div>
+            <partial name="_Selo" model="c.Status" />
+        </a>
+    }
+    </div>
 }
